@@ -1,0 +1,67 @@
+# Install required packages
+install.packages("dplyr")
+install.packages("readr")
+install.packages("tidyverse")
+
+# Load required packages
+library(dplyr)
+library(readr)
+library(tidyverse)
+
+# Load the CSV file into a DataFrame 'df'
+df <- read.csv("C:/Users/_sales_amended.csv") 
+
+# Display the first few rows of 'df' to preview the data
+head(df)
+
+# Show column names of 'df'
+names(df)
+
+# Show the structure of 'df' including data types of each column
+str(df)
+
+# Display summary statistics of 'df'
+summary(df)
+
+# Select specific columns and remove 'Location', 'Discount.Code', and 'Discount.Amount'
+df <- df %>% select(-Location, -Discount.Code, -Discount.Amount)
+
+# Open the 'df' data frame in a new view window
+View(df)
+
+# Rename columns according to snake_case convention
+colnames(df) <- c("transaction_id", "name", "revenue_category", "qty", "item", "total_sales", "frequency")
+
+# Check for duplicate rows in 'df' and return the count
+sum(duplicated(df))
+
+# Check for missing values in each column and return the column-wise sum
+colSums(is.na(df))
+colSums(df == "")
+
+# Create a new DataFrame 'df_missing' for rows where 'revenue_category' is empty
+df_missing <- df[df$revenue_category == "", ]
+View(df_missing)
+
+# Replace empty 'revenue_category' entries with "Uncategorized"
+df[df == ""] <- "Uncategorized"
+
+# Confirm the count of 'revenue_category' entries that are empty (should now be zero)
+sum(df$revenue_category == "")
+
+# Remove any parentheses from 'total_sales' values, replacing with a minus sign for negative values
+df$total_sales <- gsub("\\(([^)]+)\\)", "-\\1", df$total_sales)
+# Remove any dollar signs and commas from 'total_sales'
+df$total_sales <- gsub("[$,]", "", df$total_sales)
+# Convert 'total_sales' to a numeric data type
+df$total_sales <- as.numeric(df$total_sales)
+# Check the structure of 'total_sales' to confirm the data type conversion
+str(df$total_sales)
+
+# Display rows where 'qty' equals -1 for inspection
+View(df[df$qty == -1, ])
+# Display rows where 'name' is "Tucker Rogers" for inspection
+View(df[df$name == "Tucker Rogers", ])
+
+# Replace 'qty' values of -1 with 1
+df <- df %>% mutate(qty = ifelse(qty == -1, 1, qty))

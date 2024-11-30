@@ -1,0 +1,66 @@
+# install the required packages
+install.packages(dpylr)
+install.packages(readr)
+install.packages(ggplot2)
+install.packages(forecast)
+
+# load the required packages
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(forecast)
+
+#load the data
+df <- read.csv("C:/Users/shuva/OneDrive/Desktop/Capstone Project/Data/anonymized_memberships.csv")
+
+# view the head of data
+head(df)
+
+# view the column names
+names(df)
+
+# view the structure and summary of data
+str(df)
+summary(df)
+
+# remove the unnecessary columns
+df <- df %>% select(-Last.Renewal.Date, -Cancellation.Reason, -Cancellation.Note, -Termination.Date, -Conversion.Type, -Converted.to, -Hold.period)
+
+# view df
+View(df)
+
+# change the column names to snake_case convention
+colnames(df) <- c("name", "membership", "purchase_date", "start_date", "end_date", "auto_renew", "cancellation_date", "last_bill_amount", "status")
+
+# check the number of duplicate rows
+sum(duplicated(df))
+View(df[duplicated(df), ])
+# remove the duplicate rows
+df <- unique(df)
+
+# convert status column to factor
+df$status <- as.factor(df$status)
+summary(df$status)
+
+# check for missing values
+colSums(is.na(df))
+colSums(df == "")
+View(df[df$start_date == "", ])
+
+# replace the missing values in start_date and cancellation_date columns
+df <- df %>% mutate(start_date = ifelse(start_date == "", purchase_date, start_date))
+
+View(df[df$cancellation_date == "", ])
+nrow(df[df$status == "Expired" & df$cancellation_date == "", ])
+View(df[df$status == "Expired" & df$cancellation_date != "", ])
+nrow(df[df$status == "Active" & df$cancellation_date == "", ])
+df <- df %>% mutate(cancellation_date = ifelse(status %in% c("Active", "Active/On Hold", "Not Activated"), NA, ifelse(status == "Expired", end_date, cancellation_date)))
+
+# confirm the mising values are replaced 
+colSums(df == "" & !is.na(df))
+
+# convert the required columns to date format 
+df$purchase_date <- as.Date(df$purchase_date, format = "%d-%b-%y")
+df$start_date <- as.Date(df$start_date, format = "%d-%b-%y")
+df$end_date <- as.Date(df$end_date, format = "%d-%b-%y")
+df$cancellation_date <- as.Date(df$cancellation_date, format = "%d-%b-%y")
